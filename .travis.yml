@@ -3,6 +3,7 @@
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 # Copyright Rene Rivera 2015-2016.
+# Copyright Peter Dimov 2017.
 
 branches:
   only:
@@ -11,10 +12,9 @@ branches:
 
 dist: trusty
 
-language: c
+language: cpp
 
-compiler:
-  - gcc
+compiler: gcc
 
 addons:
   apt:
@@ -42,27 +42,37 @@ matrix:
     - env: TRAVIS_EMPTY_JOB_WORKAROUND=true
 
   include:
+
+    - env: SCRIPT=ci_boost_release MODE=check
+
     # Simple integrated status tests check.
-    - env:
-      - SCRIPT=ci_boost_status
-    
-    # Build release package for LF end-of-line style text files.
-    - env:
-      - SCRIPT=ci_boost_release
-      - EOL=LF
-    
-    # Build release package for CRLF end-of-line style text files (i.e. for Windows).
-    - env:
-      - SCRIPT=ci_boost_release
-      - EOL=CRLF
-    
+    - env: SCRIPT=ci_boost_status
+
+    # Run 'quick' tests.
+    - env: SCRIPT=ci_boost_status TARGET=quick TOOLSET=gcc
+      compiler: g++
+
+    - env: SCRIPT=ci_boost_status TARGET=quick TOOLSET=gcc CXXSTD=11
+      compiler: g++
+
+    - env: SCRIPT=ci_boost_status TARGET=quick TOOLSET=clang
+      compiler: clang++
+
+    - env: SCRIPT=ci_boost_status TARGET=quick TOOLSET=clang CXXSTD=11
+      compiler: clang++
+
+    # Run tests for the library updated by this commit.
+    - env: SCRIPT=ci_boost_test_library TOOLSET=gcc CXXSTD=11
+      compiler: g++
+
+    - env: SCRIPT=ci_boost_test_library TOOLSET=clang CXXSTD=11
+      compiler: g++
+
     # Library requirements tests.
-    - env:
-      - SCRIPT=ci_boost_library_check
+    - env: SCRIPT=ci_boost_library_check
 
   allow_failures:
-    - env:
-      - SCRIPT=ci_boost_library_check
+    - env: SCRIPT=ci_boost_library_check
 
 before_install:
   # Fetch the scripts to do the actual building/testing.
