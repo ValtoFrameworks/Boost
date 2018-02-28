@@ -868,15 +868,11 @@
     <!-- contract -->
     <library name="contract">
         <mark-unusable>
-            <toolset name="gcc-gnu-6"/>
+            <toolset name="gcc-6"/>
             <note author="Lorenzo Caminiti">
-                Tests fail to link on this compiler when libc++ is used (see
+                Tests fail to link on this compiler because of a bug in its STL
+                implementation (undefined references to `operator delete`, see
                 https://tracker.crystax.net/issues/1403).
-                This linker error does not occur with libstdc++ but
-                unfortunately the toolset name for this compiler does not
-                differentiate between libc++ and libstdc++ runs so also
-                libstdc++ tests had to be marked as expected failures (even if
-                they actually pass).
             </note>
         </mark-unusable>
         <mark-unusable>
@@ -886,7 +882,7 @@
             <note author="Lorenzo Caminiti">
                 Even tests that do not use C++11 lambda functions fail on this
                 compiler because it incorrectly attempts an extra copy when
-                objects are constructed via `boost::check c = ...`.
+                objects are constructed using `boost::check c = ...`.
                 This is fixed in MinGW GCC 4.3.
             </note>
         </mark-unusable>
@@ -894,11 +890,10 @@
             <toolset name="msvc-7.1"/>
             <note author="Lorenzo Caminiti">
                 Even tests that do not use C++11 lambda functions fail on this
-                compiler because of a number of different issues
-                (Boost.Exception, which used by this library, also is not
-                supported on this compiler, incorrect implementation of some
-                aspects of friendship, incorrect dispatching of some `volatile`
-                calls, etc.).
+                compiler because of a number of issues (Boost.Exception is not
+                supported on this compiler but it is used by this library
+                implementation, some aspects of `friend` and `volatile` are not
+                properly implemented on this compiler, etc.).
                 These specific issues are fixed in MSVC 9.0 (but only MSVC 11.0
                 has adequate lambda function support that makes this library
                 actually usable).
@@ -906,25 +901,26 @@
         </mark-unusable>
         <mark-expected-failures>
             <test name="disable-audit"/>
-            <toolset name="gcc-gnu-4.9"/>
-            <toolset name="gcc-gnu-5"/>
+            <toolset name="gcc-4.9"/>
+            <toolset name="gcc-5"/>
+            <toolset name="clang-linux-3.6"/>
+            <toolset name="clang-linux-3.7"/>
+            <toolset name="clang-linux-3.8"/>
             <note author="Lorenzo Caminiti">
-                This test fails on this compiler because of a bug in libc++
-                (see http://grokbase.com/t/gg/android-ndk/1656csqqtp/assertion-ttypeencoding-dw-eh-pe-absptr-unexpected-ttypeencoding-failed).
-                This is fixed in libstdc++.
+                This test fails on this compiler because of a bug with
+                exceptions (see http://grokbase.com/t/gg/android-ndk/1656csqqtp/assertion-ttypeencoding-dw-eh-pe-absptr-unexpected-ttypeencoding-failed).
             </note>
         </mark-expected-failures>
         <mark-expected-failures>
             <test name="invariant-ifdef"/>
-            <test name="invariant-ifdef_macro"/>
             <test name="specify-nothing"/>
-            <toolset name="clang-gnu-linux-3.6"/>
-            <toolset name="clang-gnu-linux-3.7"/>
-            <toolset name="clang-gnu-linux-3.8"/>
+            <toolset name="clang-linux-3.6"/>
+            <toolset name="clang-linux-3.7"/>
+            <toolset name="clang-linux-3.8"/>
             <note author="Lorenzo Caminiti">
-                This test fails on this compiler because of a bug in libstdc++
-                (undefined references to `std::ios_base::failure::failure`).
-                This is fixed in libc++.
+                This test fails on this compiler because of a bug in its STL
+                implementation (undefined references to
+                `std::ios_base::failure::failure`).
             </note>
         </mark-expected-failures>
         <mark-expected-failures>
@@ -951,6 +947,7 @@
             <test name="specify-auto_pre_old_error"/>
             <test name="specify-auto_pre_old_post_error"/>
             <test name="specify-auto_pre_old_post_except_error"/>
+            <toolset name="intel-linux-linux"/>
             <toolset name="clang-darwin*"/>
             <toolset name="clang-darwin*"/>
             <toolset name="clang-darwin*"/>
@@ -1123,17 +1120,6 @@
                 reference to this possible compiler issue online).
                 This is fixed in MSVC 9.0 (but only MSVC 11.0 has adequate
                 lambda function support).
-            </note>
-        </mark-expected-failures>
-        <!-- following due to other boost libs, could be fixed in master? -->
-        <mark-expected-failures>
-            <test name="old-auto"/>
-            <test name="old-copyable_traits"/>
-            <toolset name="gcc-4.6c+"/>
-            <note author="Lorenzo Caminiti">
-                This test fails because of this compiler/platform cause an
-                error in Boost.TypeTraits (this could be fixed in the master
-                branch... not sure).
             </note>
         </mark-expected-failures>
     </library>
@@ -3581,19 +3567,17 @@ for more information.
     
     <!-- phoenix -->
     <library name="phoenix">
-      <mark-unusable>
-        <toolset name="sun-5.7"/>
-        <toolset name="sun-5.8"/>
-        <toolset name="sun-5.9"/>
-        <toolset name="sun-5.10"/>
-        <toolset name="borland-*"/>
-        <toolset name="vacpp*"/>
-        <toolset name="cray-8.0"/>
-        <note author="Thomas Heller" id="phoenix-incompatible-compilers">
-            These compilers don't work with phoenix.
-            This is due to the fact that phoenix uses proto
-        </note>
-        </mark-unusable>
+        <mark-expected-failures>
+            <test name="lambda_tests7"/>
+            <test name="lambda_tests10"/>
+            <test name="lambda_tests11"/>
+            <test name="lambda_tests14"/>
+            <test name="lambda_tests15"/>
+            <toolset name="msvc-12.0"/>
+            <note author="Kohei Takahsahi">
+                Wrokaround: define BOOST_RESULT_OF_USE_TR1
+            </note>
+        </mark-expected-failures>
     </library>
 
     <!-- poly_collection -->
@@ -3916,7 +3900,15 @@ for more information.
         <toolset name="vacpp*"/>
         <toolset name="borland-*"/>
         <toolset name="cray-8.0"/>
+        <toolset name="msvc-7.1*"/>
+        <toolset name="clang-*-3.1*11*"/>
+        <toolset name="gcc-mngw-gnu-4.3c+"/>
       </mark-unusable>
+      <test name="karma_*" category="Karma" />
+      <test name="lex_*" category="Lex" />
+      <test name="qi_*" category="Qi" />
+      <test name="support_*" category="Support" />
+      <test name="x3_*" category="X3" />
     </library>
 
     <!-- spirit (v2) repository -->
@@ -3924,7 +3916,12 @@ for more information.
       <mark-unusable>
         <toolset name="borland-cb2009"/>
         <toolset name="borland-cb2010"/>
+        <toolset name="msvc-7.1*"/>
+        <toolset name="clang-*-3.1*11*"/>
+        <toolset name="gcc-mngw-gnu-4.3c+"/>
       </mark-unusable>
+      <test name="karma_*" category="Karma" />
+      <test name="qi_*" category="Qi" />
     </library>
 
     <!-- spirit (classic) -->
@@ -7132,12 +7129,23 @@ This platform doesn't supports Boost.Container.
         <test name="compile_map_unordered_allocator"/>
         <toolset name="msvc-7.1"/>
         <note author="Daniel James">
-            This tests whether inserting elements creates as few copies as I think
-            is possible. If this fails it just means that the container might be
-            a little inefficient.
+            This test fail because it's using unordered's internal
+            allocator traits, which doesn't work on Visual C++ 7.1.
+            It normally uses the one from Boost.Container by default.
         </note>
       </mark-expected-failures>
-    </library>
+
+      <mark-expected-failures>
+        <test name="noexcept_tests"/>
+        <toolset name="gcc-4.3c+"/>
+        <note author="Daniel James">
+            boost::is_nothrow_move_constructible and
+            boost::is_nothrow_move_assignable don't seem to work on this
+            compiler. I'd hope that anyone wanting noexcept support would
+            use a more recent compiler anyway.
+        </note>
+      </mark-expected-failures>
+      </library>
 
     <!-- utility/enable_if -->
     <library name="utility/enable_if">
